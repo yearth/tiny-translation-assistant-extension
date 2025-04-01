@@ -1,0 +1,21 @@
+/* 使用 Tailwind 的方式定义特定组件样式 */
+
+/* 翻译助手弹出框样式 */
+.translation-popup {
+  @apply fixed rounded-lg bg-white p-3 shadow-lg dark:bg-gray-800 z-50 max-w-sm;
+}
+
+/* 翻译结果样式 */
+.translation-result {
+  @apply mt-2 text-sm text-gray-700 dark:text-gray-300;
+}
+
+/* 翻译按钮样式 */
+.translation-button {
+  @apply mt-2 rounded-md bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* 加载中状态 */
+.loading-spinner {
+  @apply mx-auto h-5 w-5 animate-spin text-gray-400;
+}

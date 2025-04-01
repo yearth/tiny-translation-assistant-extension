@@ -1,0 +1,75 @@
+/* 内容脚本的 Tailwind CSS 样式 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 翻译助手内容脚本特定样式 */
+@layer components {
+  /* 选中文本的高亮样式 */
+  .translation-highlight {
+    @apply bg-yellow-200 dark:bg-yellow-700;
+  }
+
+  /* 翻译弹出框容器 */
+  .translation-popup {
+    @apply fixed z-50 rounded-lg bg-white p-3 shadow-lg dark:bg-gray-800;
+    @apply min-w-[200px] max-w-sm;
+    @apply text-sm text-gray-700 dark:text-gray-300;
+    @apply border border-gray-200 dark:border-gray-700;
+  }
+
+  /* 翻译弹出框标题 */
+  .translation-popup-header {
+    @apply mb-2 flex items-center justify-between;
+  }
+
+  /* 翻译弹出框标题文本 */
+  .translation-popup-title {
+    @apply text-base font-medium text-gray-900 dark:text-white;
+  }
+
+  /* 关闭按钮 */
+  .translation-popup-close {
+    @apply cursor-pointer rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300;
+  }
+
+  /* 翻译内容 */
+  .translation-popup-content {
+    @apply py-1;
+  }
+
+  /* 翻译结果 */
+  .translation-result {
+    @apply text-sm;
+  }
+
+  /* 加载中状态 */
+  .translation-loading {
+    @apply flex items-center justify-center py-2;
+  }
+
+  /* 加载中图标 */
+  .translation-loading-spinner {
+    @apply h-5 w-5 animate-spin text-blue-500;
+  }
+
+  /* 翻译操作按钮容器 */
+  .translation-actions {
+    @apply mt-2 flex justify-end space-x-2;
+  }
+
+  /* 翻译按钮基础样式 */
+  .translation-btn {
+    @apply rounded px-2 py-1 text-xs font-medium transition-colors;
+  }
+
+  /* 主要按钮 */
+  .translation-btn-primary {
+    @apply translation-btn bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  /* 次要按钮 */
+  .translation-btn-secondary {
+    @apply translation-btn bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600;
+  }
+}
