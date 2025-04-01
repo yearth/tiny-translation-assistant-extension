@@ -22,5 +22,11 @@
       "js": ["src/content/index.js"],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["shadow-dom.css"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
   ]
 }

@@ -9,6 +9,9 @@ import {
   flip,
   size,
 } from "@floating-ui/dom";
+import React from "react";
+import * as ReactDOM from "react-dom/client";
+import Toolbar from "./components/Toolbar";
 
 // 导入 Tailwind CSS 样式
 import "./content.css";
@@ -59,8 +62,9 @@ function findContextElement(node: Node | null): HTMLElement | null {
 class FloatingUI {
   private hostElement: HTMLDivElement | null = null;
   private shadowRoot: ShadowRoot | null = null;
-  private buttonElement: HTMLButtonElement | null = null;
+  private reactRoot: any = null; // ReactDOM.Root 类型
   private isVisible: boolean = false;
+  private selectedText: string = "";
 
   constructor() {
     this.initialize();
@@ -72,119 +76,166 @@ class FloatingUI {
     this.hostElement = document.createElement("div");
     this.hostElement.id = "translation-assistant-host";
     this.hostElement.className = "translation-popup";
-    this.hostElement.style.position = "absolute"; // <--- CHANGE/ADD THIS
-    this.hostElement.style.zIndex = "2147483647";
+    this.hostElement.style.position = "absolute"; // 确保绝对定位
+    this.hostElement.style.zIndex = "2147483647"; // 最高层级
+    this.hostElement.style.backgroundColor = "transparent";
+    this.hostElement.style.border = "none";
+    this.hostElement.style.padding = "0";
     this.hostElement.style.display = "none";
     document.body.appendChild(this.hostElement);
 
     // 创建Shadow DOM
     this.shadowRoot = this.hostElement.attachShadow({ mode: "open" });
 
-    // 创建样式元素
-    const style = document.createElement("style");
-    style.textContent = `
-      /* 内容脚本的基本样式 */
-      .translation-popup-container {
-        font-family: system-ui, -apple-system, sans-serif;
-        background-color: white;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        max-width: 20rem;
+    // 创建样式元素 - 从外部加载预编译的 CSS
+    const style = document.createElement("link");
+    style.setAttribute("rel", "stylesheet");
+    // 使用 browser API 或 chrome API 获取扩展资源 URL
+    const extensionURL = chrome.runtime.getURL("shadow-dom.css");
+    style.setAttribute("href", extensionURL);
+
+    // 添加备用内联样式，以防外部样式加载失败
+    const fallbackStyle = document.createElement("style");
+    fallbackStyle.textContent = `
+      /* 基础 CSS 变量 - 仅作为备用 */
+      :host {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+        --radius: 0.5rem;
       }
       
-      .translation-popup-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-      }
+      /* 基础样式 */
+      .bg-background { background-color: hsl(var(--background)); }
+      .text-foreground { color: hsl(var(--foreground)); }
+      .border-border { border-color: hsl(var(--border)); }
       
-      .translation-popup-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1f2937;
-      }
+      /* 按钮样式 */
+      .inline-flex { display: inline-flex; }
+      .items-center { align-items: center; }
+      .justify-center { justify-content: center; }
+      .whitespace-nowrap { white-space: nowrap; }
+      .rounded-md { border-radius: calc(var(--radius) - 2px); }
+      .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+      .font-medium { font-weight: 500; }
+      .ring-offset-background { --tw-ring-offset-color: hsl(var(--background)); }
+      .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+      .focus-visible\:outline-none:focus-visible { outline: 2px solid transparent; outline-offset: 2px; }
+      .focus-visible\:ring-2:focus-visible { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color); box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
+      .focus-visible\:ring-ring:focus-visible { --tw-ring-color: hsl(var(--ring)); }
+      .focus-visible\:ring-offset-2:focus-visible { --tw-ring-offset-width: 2px; }
+      .disabled\:pointer-events-none:disabled { pointer-events: none; }
+      .disabled\:opacity-50:disabled { opacity: 0.5; }
       
-      .translation-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-      }
+      /* 按钮变体 */
+      .bg-primary { background-color: hsl(var(--primary)); }
+      .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+      .hover\:bg-primary\/90:hover { background-color: hsl(var(--primary) / 0.9); }
       
-      .translation-btn {
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        transition: background-color 0.2s;
-        cursor: pointer;
-        border: none;
-      }
+      .bg-secondary { background-color: hsl(var(--secondary)); }
+      .text-secondary-foreground { color: hsl(var(--secondary-foreground)); }
+      .hover\:bg-secondary\/80:hover { background-color: hsl(var(--secondary) / 0.8); }
       
-      .translation-btn-primary {
-        background-color: #3b82f6;
-        color: white;
-      }
+      .border { border-width: 1px; }
+      .border-input { border-color: hsl(var(--input)); }
+      .bg-background { background-color: hsl(var(--background)); }
+      .hover\:bg-accent:hover { background-color: hsl(var(--accent)); }
+      .hover\:text-accent-foreground:hover { color: hsl(var(--accent-foreground)); }
       
-      .translation-btn-primary:hover {
-        background-color: #2563eb;
-      }
+      /* 布局样式 */
+      .flex { display: flex; }
+      .items-center { align-items: center; }
+      .space-x-2 > * + * { margin-left: 0.5rem; }
+      .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+      .mr-1 { margin-right: 0.25rem; }
+      .ml-auto { margin-left: auto; }
+      .min-w-\[300px\] { min-width: 300px; }
+      .p-2 { padding: 0.5rem; }
+      
+      /* 颜色和背景 */
+      .bg-white { background-color: white; }
+      .text-gray-800 { color: #1f2937; }
+      .hover\:bg-gray-100:hover { background-color: #f3f4f6; }
+      .border-gray-200 { border-color: #e5e7eb; }
+      
+      /* 边框和阴影 */
+      .rounded { border-radius: 0.25rem; }
+      .rounded-lg { border-radius: 0.5rem; }
+      .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+      .border { border-width: 1px; border-style: solid; }
+      
+      /* 交互 */
+      .cursor-pointer { cursor: pointer; }
+      .flex-col { flex-direction: column; }
+      .flex-row { flex-direction: row; }
+      .gap-2 { gap: 0.5rem; }
+      .justify-end { justify-content: flex-end; }
+      .mb-1 { margin-bottom: 0.25rem; }
+      .p-3 { padding: 0.75rem; }
+      .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+      
+      /* 其他样式 */
+      .min-w-\[200px\] { min-width: 200px; }
+      .rounded-lg { border-radius: var(--radius); }
+      .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+      
+      /* 按钮尺寸 */
+      .h-9 { height: 2.25rem; }
+      .h-10 { height: 2.5rem; }
+      .h-11 { height: 2.75rem; }
+      .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .px-8 { padding-left: 2rem; padding-right: 2rem; }
+      .w-10 { width: 2.5rem; }
     `;
+    // 将外部样式和备用样式添加到 Shadow DOM
     this.shadowRoot.appendChild(style);
+    this.shadowRoot.appendChild(fallbackStyle);
 
-    // 创建容器
-    const container = document.createElement("div");
-    container.className = "translation-popup-container";
+    // 创建React根元素
+    const reactContainer = document.createElement("div");
+    reactContainer.id = "react-root";
+    this.shadowRoot.appendChild(reactContainer);
 
-    // 创建头部
-    const header = document.createElement("div");
-    header.className = "translation-popup-header";
-
-    // 创建标题
-    const title = document.createElement("div");
-    title.className = "translation-popup-title";
-    title.textContent = "翻译助手";
-    header.appendChild(title);
-
-    // 添加头部到容器
-    container.appendChild(header);
-
-    // 创建按钮
-    this.buttonElement = document.createElement("button");
-    this.buttonElement.className = "translation-btn translation-btn-primary";
-    this.buttonElement.textContent = "翻译";
-    this.buttonElement.addEventListener(
-      "click",
-      this.handleButtonClick.bind(this)
-    );
-
-    // 创建按钮容器
-    const actions = document.createElement("div");
-    actions.className = "translation-actions";
-    actions.appendChild(this.buttonElement);
-
-    // 添加按钮容器到主容器
-    container.appendChild(actions);
-
-    // 添加容器到 Shadow DOM
-    this.shadowRoot.appendChild(container);
+    // 创建React根
+    this.reactRoot = ReactDOM.createRoot(reactContainer);
   }
 
-  // 处理按钮点击
-  private handleButtonClick(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
+  // 处理翻译按钮点击
+  private handleTranslate(): void {
+    console.log("翻译按钮点击，选中的文本是:", this.selectedText);
+    // 这里可以添加翻译逻辑
+  }
 
-    const selection = window.getSelection();
-    const selectedText = selection?.toString().trim() || "";
-    console.log("用户点击了按钮，选中的文本是:", selectedText);
+  // 处理朗读按钮点击
+  private handleReadAloud(): void {
+    console.log("朗读按钮点击，选中的文本是:", this.selectedText);
+    // 这里可以添加朗读逻辑
+  }
 
-    // 这里可以添加翻译或其他操作逻辑
-
-    // 点击后隐藏按钮
-    this.hide();
+  // 处理添加到单词本按钮点击
+  private handleAddToWordbook(): void {
+    console.log("添加到单词本按钮点击，选中的文本是:", this.selectedText);
+    // 这里可以添加添加到单词本的逻辑
   }
 
   // 显示浮动按钮
@@ -193,13 +244,26 @@ class FloatingUI {
       "🔍 ~ show ~ src/content/index.ts ~ selectedText:", // (保留你的日志)
       selectedText
     );
-    if (!this.hostElement) return;
+    if (!this.hostElement || !this.reactRoot) return;
+
+    // 保存选中的文本
+    this.selectedText = selectedText;
 
     // --- 关键改动：先让 hostElement 可见 ---
     // 设置为 block，以便浏览器计算其尺寸。
     // 位置暂时不重要，后面 computePosition 会覆盖 left/top
     this.hostElement.style.display = "block";
     // ---------------------------------------
+
+    // 渲染 React 组件
+    this.reactRoot.render(
+      React.createElement(Toolbar, {
+        selectedText: this.selectedText,
+        onTranslate: this.handleTranslate.bind(this),
+        onReadAloud: this.handleReadAloud.bind(this),
+        onAddToWordbook: this.handleAddToWordbook.bind(this),
+      } as any)
+    );
 
     // 创建虚拟元素作为参考点
     const virtualRef = {
@@ -313,4 +377,4 @@ document.addEventListener("mouseup", handleTextSelection);
 document.addEventListener("mousedown", handleMouseDown);
 
 // 在控制台输出初始化信息
-console.log("Tiny Translation Assistant - 内容脚本已加载 222");
+console.log("Tiny Translation Assistant - React 版本内容脚本已加载");
