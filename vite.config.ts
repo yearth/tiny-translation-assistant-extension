@@ -29,7 +29,7 @@ export default defineConfig({
             await fs.copy(src, dest);
             console.log("复制成功！\n");
           } else {
-            console.error(`错误：文件 ${src} 不存在`);
+            // console.error(`错误：文件 ${src} 不存在`);
           }
         } catch (error) {
           console.error("复制 shadow-dom.css 时出错:", error);
@@ -45,7 +45,7 @@ export default defineConfig({
       },
       browser: "chrome", // 或者 "firefox", "edge" 等
       // 配置内容脚本和其他入口点
-      additionalInputs: ["src/content/index.ts"],
+      additionalInputs: ["src/content/index.ts", "src/options/main.tsx"],
     }),
   ],
   resolve: {
