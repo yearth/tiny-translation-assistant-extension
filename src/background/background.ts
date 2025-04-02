@@ -1,8 +1,10 @@
+console.log("background loaded");
+
 // 监听浏览器动作点击事件，打开侧边栏
-chrome.action.onClicked.addListener(() => {
-  // 打开侧边栏
-  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT });
-});
+// chrome.action.onClicked.addListener(() => {
+//   // 打开侧边栏
+//   chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+// });
 
 // 处理侧边栏的消息通信
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -28,4 +30,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
   }
   return false;
+});
+
+// 在安装或更新时设置侧边栏行为
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("Extension installed or updated!");
+  
+  // 设置点击扩展图标时自动打开侧边栏
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    .catch(error => {
+      console.error("设置侧边栏行为失败:", error);
+    });
 });

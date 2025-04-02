@@ -36,6 +36,7 @@ export default defineConfig({
         }
       },
     },
+
     webExtension({
       manifest: "./public/manifest.json",
       webExtConfig: {
@@ -46,10 +47,10 @@ export default defineConfig({
       browser: "chrome", // 或者 "firefox", "edge" 等
       // 配置全部入口点
       additionalInputs: [
-        "src/content/index.ts", 
+        "src/content/index.ts",
         "src/options/main.tsx",
-        "src/background/background.ts",
-        "src/sidepanel/main.tsx"
+        "src/sidepanel/main.tsx",
+        "src/background/background.ts"
       ],
     }),
   ],
