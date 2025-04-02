@@ -1,0 +1,61 @@
+.
+|____README.md
+|____components.json
+|____eslint.config.js
+|____index.html
+|____options.html
+|____package.json
+|____pnpm-lock.yaml
+|____postcss.config.js
+|____public
+| |____icons
+| | |____icon128.png
+| | |____icon16.png
+| | |____icon48.png
+| |____manifest.json
+| |____vite.svg
+|____scripts
+| |____build-css.js
+|____sidepanel.html
+|____src
+| |____App.css
+| |____App.tsx
+| |____assets
+| | |____react.svg
+| |____background
+| | |____background.ts
+| |____components
+| | |____ui
+| | | |____button.tsx
+| | | |____input.tsx
+| | | |____label.tsx
+| |____content
+| | |____components
+| | | |____Toolbar.tsx
+| | |____content.css
+| | |____index.ts
+| | |____shadow-dom.css
+| | |____sidepanel.ts
+| |____index.css
+| |____lib
+| | |____utils.ts
+| |____main.tsx
+| |____options
+| | |____OptionsPage.tsx
+| | |____main.tsx
+| |____sidepanel
+| | |____SidePanel.tsx
+| | |____icons.tsx
+| | |____main.tsx
+| | |____panels
+| | | |____SettingsPanel.tsx
+| | | |____WordbookPanel.tsx
+| |____types
+| | |____css.d.ts
+| |____vite-env.d.ts
+|____tailwind.config.js
+|____tree.txt
+|____tsconfig.app.json
+|____tsconfig.json
+|____tsconfig.node.json
+|____vite.config.ts

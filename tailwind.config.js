@@ -2,6 +2,7 @@
 export default {
   content: [
     "./index.html",
+    "./sidepanel.html",
     "./src/**/*.{js,ts,jsx,tsx}",
     "./src/content/shadow-dom.css",
   ],
@@ -72,5 +73,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
-
+};

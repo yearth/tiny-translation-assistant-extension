@@ -3,15 +3,13 @@ import react from "@vitejs/plugin-react";
 import webExtension from "vite-plugin-web-extension";
 import path from "path";
 import fs from "fs-extra";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  // 使用项目根目录下的 postcss.config.js
-  css: {
-    postcss: {}, // 空对象会使用默认配置文件
-  },
   plugins: [
     react(),
+    tailwindcss(),
     // 自定义插件：将 shadow-dom.css 复制到扩展根目录
     {
       name: "copy-shadow-dom-css",
@@ -50,7 +48,7 @@ export default defineConfig({
         "src/content/index.ts",
         "src/options/main.tsx",
         "src/sidepanel/main.tsx",
-        "src/background/background.ts"
+        "src/background/background.ts",
       ],
     }),
   ],
@@ -65,18 +63,16 @@ export default defineConfig({
     sourcemap: true, // 始终生成源映射以便于调试
     rollupOptions: {
       // 仅保留外部模块配置
-      external: [
-        'chrome'
-      ],
-      output: {
-        assetFileNames: (assetInfo) => {
-          // 将所有 CSS 文件放在根目录下
-          if (assetInfo.name && assetInfo.name.endsWith(".css")) {
-            return "[name][extname]";
-          }
-          return "assets/[name]-[hash][extname]";
-        },
-      }
+      external: ["chrome"],
+      // output: {
+      //   assetFileNames: (assetInfo) => {
+      //     // 将所有 CSS 文件放在根目录下
+      //     if (assetInfo.name && assetInfo.name.endsWith(".css")) {
+      //       return "[name][extname]";
+      //     }
+      //     return "assets/[name]-[hash][extname]";
+      //   },
+      // }
     },
   },
 });
