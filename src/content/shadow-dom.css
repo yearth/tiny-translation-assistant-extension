@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* 重置样式 */
 *,
 *::before,
@@ -8,16 +10,79 @@
 }
 
 /* 基础样式重置 */
-html, body, div, span, h1, h2, h3, h4, h5, h6, p, 
-blockquote, pre, a, abbr, address, cite, code, 
-del, dfn, em, img, ins, kbd, q, s, samp, 
-small, strong, sub, sup, var, b, u, i, dl, dt, dd, ol, ul, li, 
-fieldset, form, label, legend, 
-table, caption, tbody, tfoot, thead, tr, th, td, 
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
-menu, nav, output, ruby, section, summary, 
-time, mark, audio, video {
+html,
+body,
+div,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+address,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strong,
+sub,
+sup,
+var,
+b,
+u,
+i,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
   margin: 0;
   padding: 0;
   border: 0;
@@ -57,10 +122,12 @@ time, mark, audio, video {
 
 /* 自定义组件样式 */
 .translation-popup {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   line-height: 1.5;
   color: hsl(var(--foreground));
   background-color: hsl(var(--background));
   border-radius: var(--radius);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }

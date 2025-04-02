@@ -237,12 +237,6 @@ class FloatingUI {
     // 这里可以添加朗读逻辑
   }
 
-  // 处理添加到单词本按钮点击
-  private handleAddToWordbook(): void {
-    console.log("添加到单词本按钮点击，选中的文本是:", this.selectedText);
-    // 这里可以添加添加到单词本的逻辑
-  }
-
   // 显示浮动按钮
   public show(range: Range, selectedText: string): void {
     console.log(
@@ -263,10 +257,8 @@ class FloatingUI {
     // 渲染 React 组件
     this.reactRoot.render(
       React.createElement(Toolbar, {
-        selectedText: this.selectedText,
         onTranslate: this.handleTranslate.bind(this),
         onReadAloud: this.handleReadAloud.bind(this),
-        onAddToWordbook: this.handleAddToWordbook.bind(this),
       } as any)
     );
 
