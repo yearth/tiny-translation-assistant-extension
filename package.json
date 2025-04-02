@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node --experimental-modules scripts/build-css.js",
+    "build:css": "node --experimental-modules scripts/build-css.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
