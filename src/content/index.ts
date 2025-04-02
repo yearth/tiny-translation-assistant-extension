@@ -5,9 +5,9 @@ import { computePosition, offset, shift, flip, size } from "@floating-ui/dom";
 import React from "react";
 import * as ReactDOM from "react-dom/client";
 import Toolbar from "./components/Toolbar";
-
-// 导入 Tailwind CSS 样式
-import "./content.css";
+import TranslationPanel from "./components/TranslationPanel";
+// import { translateWithOpenRouter } from "./utils/openRouterApi";
+import { translateWithGemini } from "./utils/geminiApi";
 
 // 定义可能的段落或逻辑部分的块级元素标签
 const BLOCK_ELEMENTS = [
@@ -58,6 +58,13 @@ class FloatingUI {
   private reactRoot: any = null; // ReactDOM.Root 类型
   private isVisible: boolean = false;
   private selectedText: string = "";
+  private contextText: string = "";
+
+  // 翻译面板相关状态
+  private translationHostElement: HTMLDivElement | null = null;
+  private translationShadowRoot: ShadowRoot | null = null;
+  private translationReactRoot: any = null; // ReactDOM.Root 类型
+  private isTranslationPanelVisible: boolean = false;
 
   constructor() {
     this.initialize();
@@ -65,7 +72,7 @@ class FloatingUI {
 
   // 初始化UI元素
   private initialize(): void {
-    // 创建宿主元素
+    // 创建工具栏宿主元素
     this.hostElement = document.createElement("div");
     this.hostElement.id = "translation-assistant-host";
     this.hostElement.className = "translation-popup";
@@ -77,7 +84,7 @@ class FloatingUI {
     this.hostElement.style.display = "none";
     document.body.appendChild(this.hostElement);
 
-    // 创建Shadow DOM
+    // 创建工具栏Shadow DOM
     this.shadowRoot = this.hostElement.attachShadow({ mode: "open" });
 
     // 创建样式元素 - 从外部加载预编译的 CSS
@@ -211,24 +218,152 @@ class FloatingUI {
 
     // 创建React根
     this.reactRoot = ReactDOM.createRoot(reactContainer);
+
+    // 创建翻译面板宿主元素
+    this.translationHostElement = document.createElement("div");
+    this.translationHostElement.id = "translation-details-panel-host";
+    this.translationHostElement.style.position = "absolute";
+    this.translationHostElement.style.zIndex = "2147483647";
+    this.translationHostElement.style.backgroundColor = "#fff";
+    // this.translationHostElement.style.border = "none";
+    this.translationHostElement.style.padding = "0";
+    this.translationHostElement.style.display = "none";
+    document.body.appendChild(this.translationHostElement);
+
+    // 创建翻译面板Shadow DOM
+    this.translationShadowRoot = this.translationHostElement.attachShadow({
+      mode: "open",
+    });
+
+    // 复用相同的样式
+    const translationStyle = document.createElement("link");
+    translationStyle.setAttribute("rel", "stylesheet");
+    translationStyle.setAttribute("href", extensionURL);
+
+    // 添加备用内联样式
+    const translationFallbackStyle = document.createElement("style");
+    translationFallbackStyle.textContent = fallbackStyle.textContent;
+
+    // 将样式添加到翻译面板Shadow DOM
+    this.translationShadowRoot.appendChild(translationStyle);
+    this.translationShadowRoot.appendChild(translationFallbackStyle);
+
+    // 创建翻译面板React根元素
+    const translationReactContainer = document.createElement("div");
+    translationReactContainer.id = "translation-react-root";
+    this.translationShadowRoot.appendChild(translationReactContainer);
+
+    // 创建翻译面板React根
+    this.translationReactRoot = ReactDOM.createRoot(translationReactContainer);
   }
 
   // 处理翻译按钮点击
   private handleTranslate(): void {
     console.log("翻译按钮点击，选中的文本是:", this.selectedText);
+    console.log("上下文段落:", this.contextText);
+
+    // 确保有选中文本
+    if (!this.selectedText) {
+      console.warn("未选中文本，无法翻译");
+      return;
+    }
 
     // 从chrome.storage.local中检索API密钥
-    chrome.storage.local.get(["openRouterApiKey"], (result) => {
+    chrome.storage.local.get(["geminiApiKey"], (result) => {
       if (chrome.runtime.lastError) {
         console.error("获取API密钥时出错:", chrome.runtime.lastError);
       } else {
-        console.log("用于翻译的API密钥:", result.openRouterApiKey);
-        // 这里可以添加使用API密钥进行翻译的逻辑
-        if (!result.openRouterApiKey) {
-          console.warn("未设置API密钥，请在扩展选项页中设置API密钥");
+        const apiKey = result.geminiApiKey;
+        console.log("用于翻译的Gemini API密钥:", apiKey);
+
+        // 如果API密钥存在，显示翻译面板并调用API
+        if (apiKey) {
+          this.showTranslationPanelWithLoading();
+          this.fetchTranslationWithGemini(
+            apiKey,
+            this.selectedText,
+            this.contextText
+          );
+        } else {
+          console.warn("未设置Gemini API密钥，请在扩展选项页中设置API密钥");
         }
       }
     });
+  }
+
+  // 使用OpenRouter API获取翻译结果（保留但不使用）
+  // private async fetchTranslation(
+  //   apiKey: string,
+  //   word: string,
+  //   context: string
+  // ): Promise<void> {
+  //   try {
+  //     // 使用流式输出回调函数
+  //     await translateWithOpenRouter(
+  //       apiKey,
+  //       word,
+  //       context,
+  //       (partialResponse) => {
+  //         // 更新翻译面板内容
+  //         this.updateTranslationPanel({
+  //           contextualMeaning: partialResponse.contextualMeaning || word,
+  //           contextualExplanation:
+  //             partialResponse.contextualExplanation || "正在加载解释...",
+  //           dictionaryDefinition:
+  //             partialResponse.dictionaryDefinition || "正在加载定义...",
+  //           exampleSentence:
+  //             partialResponse.exampleSentence || "正在加载示例...",
+  //           isLoading: false,
+  //         });
+  //       }
+  //     );
+  //   } catch (error) {
+  //     console.error("获取翻译结果时出错:", error);
+  //     // 显示错误信息
+  //     this.updateTranslationPanel({
+  //       contextualMeaning: word,
+  //       contextualExplanation: "获取翻译结果时出错，请重试。",
+  //       dictionaryDefinition: "出错了！",
+  //       exampleSentence: "请检查您的API密钥和网络连接。",
+  //       isLoading: false,
+  //     });
+  //   }
+  // }
+
+  // 使用Gemini API获取翻译结果
+  private async fetchTranslationWithGemini(
+    apiKey: string,
+    word: string,
+    context: string
+  ): Promise<void> {
+    try {
+      // 使用流式输出回调函数
+      await translateWithGemini(apiKey, word, context, (partialResponse) => {
+        console.log(
+          "🔍 ~ fetchTranslationWithGemini ~ src/content/index.ts:341 ~ partialResponse:",
+          partialResponse
+        );
+        // 更新翻译面板内容
+        this.updateTranslationPanel({
+          meaning: partialResponse.meaning || word,
+          contextualMeaning: partialResponse.contextualMeaning || "正在加载上下文含义...",
+          dictionaryDefinition:
+            partialResponse.dictionaryDefinition || "正在加载定义...",
+          exampleSentence: partialResponse.exampleSentence || "正在加载示例...",
+          isLoading: false,
+        });
+      });
+    } catch (error) {
+      console.error("获取Gemini翻译结果时出错:", error);
+      // 显示错误信息
+      this.updateTranslationPanel({
+        meaning: word,
+        contextualMeaning: "获取翻译结果时出错，请重试。",
+        dictionaryDefinition: "出错了！",
+        exampleSentence: "请检查您的Gemini API密钥和网络连接。",
+        isLoading: false,
+      });
+    }
   }
 
   // 处理朗读按钮点击
@@ -238,15 +373,12 @@ class FloatingUI {
   }
 
   // 显示浮动按钮
-  public show(range: Range, selectedText: string): void {
-    console.log(
-      "🔍 ~ show ~ src/content/index.ts ~ selectedText:", // (保留你的日志)
-      selectedText
-    );
+  public show(range: Range, selectedText: string, contextText: string): void {
     if (!this.hostElement || !this.reactRoot) return;
 
     // 保存选中的文本
     this.selectedText = selectedText;
+    this.contextText = contextText;
 
     // --- 关键改动：先让 hostElement 可见 ---
     // 设置为 block，以便浏览器计算其尺寸。
@@ -310,11 +442,82 @@ class FloatingUI {
     });
   }
 
+  // 显示翻译面板（加载状态）
+  private showTranslationPanelWithLoading(): void {
+    if (!this.translationHostElement || !this.translationReactRoot) return;
+
+    this.isTranslationPanelVisible = true;
+    this.translationHostElement.style.display = "block";
+
+    // 渲染翻译面板组件（加载状态）
+    this.translationReactRoot.render(
+      React.createElement(TranslationPanel, {
+        contextualMeaning: this.selectedText,
+        contextualExplanation: "正在加载解释...",
+        dictionaryDefinition: "正在加载定义...",
+        exampleSentence: "正在加载示例...",
+        isLoading: true,
+        onSave: () => console.log("保存到笔记"),
+        onClose: this.hideTranslationPanel.bind(this),
+      } as any)
+    );
+
+    // 使用工具栏作为参考元素定位翻译面板
+    if (this.hostElement) {
+      computePosition(this.hostElement, this.translationHostElement, {
+        placement: "bottom-start",
+        middleware: [offset(10), flip(), shift({ padding: 5 })],
+      }).then(({ x, y }) => {
+        if (this.translationHostElement) {
+          this.translationHostElement.style.left = `${x}px`;
+          this.translationHostElement.style.top = `${y}px`;
+        }
+      });
+    }
+  }
+
+  // 更新翻译面板内容
+  private updateTranslationPanel(props: {
+    meaning: string;
+    contextualMeaning: string;
+    dictionaryDefinition: string;
+    exampleSentence: string;
+    isLoading?: boolean;
+  }): void {
+    console.log(
+      "更新翻译面板:",
+      props,
+      this.translationReactRoot,
+      this.isTranslationPanelVisible
+    );
+    if (!this.translationReactRoot || !this.isTranslationPanelVisible) return;
+
+    console.log("开始渲染翻译面板");
+
+    // 渲染更新后的翻译面板组件
+    this.translationReactRoot.render(
+      React.createElement(TranslationPanel, {
+        ...props,
+        onSave: () => console.log("保存到笔记"),
+        onClose: this.hideTranslationPanel.bind(this),
+      } as any)
+    );
+  }
+
+  // 隐藏翻译面板
+  private hideTranslationPanel(): void {
+    if (this.translationHostElement && this.isTranslationPanelVisible) {
+      this.translationHostElement.style.display = "none";
+      this.isTranslationPanelVisible = false;
+    }
+  }
+
   // 隐藏浮动按钮
   public hide(): void {
     if (this.hostElement && this.isVisible) {
       this.hostElement.style.display = "none";
       this.isVisible = false;
+      this.hideTranslationPanel();
     }
   }
 
@@ -344,15 +547,16 @@ function handleTextSelection(event: MouseEvent): void {
 
     // 查找上下文段落
     const contextElement = findContextElement(selection?.anchorNode || null);
+    let contextText = "";
     if (contextElement) {
-      const contextText = contextElement.textContent?.trim();
+      contextText = contextElement.textContent?.trim() || "";
       console.log("上下文段落:", contextText);
     }
 
     // 显示浮动按钮
     const range = selection?.getRangeAt(0);
     if (range) {
-      floatingUI.show(range, selectedText);
+      floatingUI.show(range, selectedText, contextText);
     }
   }
 }
@@ -361,10 +565,20 @@ function handleTextSelection(event: MouseEvent): void {
  * 处理鼠标按下事件
  */
 function handleMouseDown(event: MouseEvent): void {
-  // 检查点击是否发生在浮动按钮外部
+  // 检查点击是否发生在浮动按钮或翻译面板外部
   const hostElement = document.getElementById("translation-assistant-host");
-  if (hostElement && !hostElement.contains(event.target as Node)) {
-    // 如果点击发生在浮动按钮外部，隐藏它
+  const translationHostElement = document.getElementById(
+    "translation-details-panel-host"
+  );
+
+  const isClickOutsideToolbar =
+    hostElement && !hostElement.contains(event.target as Node);
+  const isClickOutsideTranslationPanel =
+    translationHostElement &&
+    !translationHostElement.contains(event.target as Node);
+
+  // 如果点击发生在两个元素外部，隐藏它们
+  if (isClickOutsideToolbar && isClickOutsideTranslationPanel) {
     floatingUI.hide();
   }
 }
