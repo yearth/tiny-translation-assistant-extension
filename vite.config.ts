@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import webExtension from "vite-plugin-web-extension";
 import path from "path";
-import fs from "fs-extra";
+// import fs from "fs-extra";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
@@ -11,29 +11,29 @@ export default defineConfig({
     react(),
     tailwindcss(),
     // 自定义插件：将 shadow-dom.css 复制到扩展根目录
-    {
-      name: "copy-shadow-dom-css",
-      apply: "build",
-      closeBundle: async () => {
-        try {
-          const src = path.resolve(
-            __dirname,
-            "dist/src/content/shadow-dom.css"
-          );
-          const dest = path.resolve(__dirname, "dist/shadow-dom.css");
+    // {
+    //   name: "copy-shadow-dom-css",
+    //   apply: "build",
+    //   closeBundle: async () => {
+    //     try {
+    //       const src = path.resolve(
+    //         __dirname,
+    //         "dist/src/content/shadow-dom.css"
+    //       );
+    //       const dest = path.resolve(__dirname, "dist/shadow-dom.css");
 
-          if (fs.existsSync(src)) {
-            console.log(`\n复制 ${src} 到 ${dest}`);
-            await fs.copy(src, dest);
-            console.log("复制成功！\n");
-          } else {
-            // console.error(`错误：文件 ${src} 不存在`);
-          }
-        } catch (error) {
-          console.error("复制 shadow-dom.css 时出错:", error);
-        }
-      },
-    },
+    //       if (fs.existsSync(src)) {
+    //         console.log(`\n复制 ${src} 到 ${dest}`);
+    //         await fs.copy(src, dest);
+    //         console.log("复制成功！\n");
+    //       } else {
+    //         // console.error(`错误：文件 ${src} 不存在`);
+    //       }
+    //     } catch (error) {
+    //       console.error("复制 shadow-dom.css 时出错:", error);
+    //     }
+    //   },
+    // },
 
     webExtension({
       manifest: "./public/manifest.json",
