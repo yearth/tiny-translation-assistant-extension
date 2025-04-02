@@ -9,7 +9,8 @@
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
-    }
+    },
+    "default_title": "打开翻译助手侧边栏"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -33,5 +34,12 @@
     "page": "options.html",
     "open_in_tab": true
   },
-  "permissions": ["storage"]
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "src/background/background.js",
+    "type": "module"
+  },
+  "permissions": ["storage", "sidePanel"]
 }

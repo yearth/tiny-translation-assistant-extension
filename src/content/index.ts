@@ -1,14 +1,7 @@
 /**
  * 内容脚本 - 选中文本后显示浮动按钮
  */
-import {
-  computePosition,
-  // autoPlacement,
-  offset,
-  shift,
-  flip,
-  size,
-} from "@floating-ui/dom";
+import { computePosition, offset, shift, flip, size } from "@floating-ui/dom";
 import React from "react";
 import * as ReactDOM from "react-dom/client";
 import Toolbar from "./components/Toolbar";
@@ -223,16 +216,16 @@ class FloatingUI {
   // 处理翻译按钮点击
   private handleTranslate(): void {
     console.log("翻译按钮点击，选中的文本是:", this.selectedText);
-    
+
     // 从chrome.storage.local中检索API密钥
-    chrome.storage.local.get(['openRouterApiKey'], (result) => {
+    chrome.storage.local.get(["openRouterApiKey"], (result) => {
       if (chrome.runtime.lastError) {
-        console.error('获取API密钥时出错:', chrome.runtime.lastError);
+        console.error("获取API密钥时出错:", chrome.runtime.lastError);
       } else {
-        console.log('用于翻译的API密钥:', result.openRouterApiKey);
+        console.log("用于翻译的API密钥:", result.openRouterApiKey);
         // 这里可以添加使用API密钥进行翻译的逻辑
         if (!result.openRouterApiKey) {
-          console.warn('未设置API密钥，请在扩展选项页中设置API密钥');
+          console.warn("未设置API密钥，请在扩展选项页中设置API密钥");
         }
       }
     });

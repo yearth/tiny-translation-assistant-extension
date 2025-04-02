@@ -44,8 +44,13 @@ export default defineConfig({
         target: "chromium",
       },
       browser: "chrome", // 或者 "firefox", "edge" 等
-      // 配置内容脚本和其他入口点
-      additionalInputs: ["src/content/index.ts", "src/options/main.tsx"],
+      // 配置全部入口点
+      additionalInputs: [
+        "src/content/index.ts", 
+        "src/options/main.tsx",
+        "src/background/background.ts",
+        "src/sidepanel/main.tsx"
+      ],
     }),
   ],
   resolve: {
@@ -58,6 +63,10 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true, // 始终生成源映射以便于调试
     rollupOptions: {
+      // 仅保留外部模块配置
+      external: [
+        'chrome'
+      ],
       output: {
         assetFileNames: (assetInfo) => {
           // 将所有 CSS 文件放在根目录下
@@ -66,7 +75,7 @@ export default defineConfig({
           }
           return "assets/[name]-[hash][extname]";
         },
-      },
+      }
     },
   },
 });
